@@ -7,10 +7,10 @@ const MOVIES = require('./movies-data-small.json')
 
 const app = express()
 
-console.log(process.env.API_TOKEN)
+const morganSetting = process.env.NODE_ENV === 'production' ? 'tiny' : 'common'
 
 app
-  .use(morgan('dev'))
+  .use(morgan(morganSetting))
   .use(helmet())
   .use(cors())
 
@@ -40,13 +40,24 @@ app.get('/movies', function handleGetMovies(req, res) {
   if (avg_vote) {
     let vote = Number(avg_vote)
     response = response.filter(movie => movie.avg_vote >= vote)
-    console.log(vote, response)
+    
   }
   res.json(response)
 })
 
 app.get('/', (req, res) => {
   res.json('hello')
+})
+
+app.use((error, req, res, next) => {
+  let response
+  if (process.env.NODE_ENV === 'production') {
+    response = { error: { message: 'server error'}}
+  } else {
+    response = {error}
+  }
+  res.status(500).json(response)
+
 })
 
 module.exports = app
